@@ -9,10 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -25,23 +22,46 @@ public class MainPageServlet extends HttpServlet {
     String password = "@Ynik2005";
     private DatabaseManager dbManager;
     private ArrayList<Record> records = new ArrayList<Record>();
+    private  ArrayList<String> categories_names;
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/html");
-        ArrayList<Integer> cats = new ArrayList<>();
-        cats.add(9);cats.add(4);
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("text/html");
+
         try {
             Class.forName("org.postgresql.Driver");
             dbManager = DatabaseManager.getInstance(url,user,password);
-            records = DatabaseManager.toArrayList(dbManager.selectByCategory(cats));
+            categories_names = dbManager.selectAllCategories();
+        } catch (SQLException | ClassNotFoundException e) {
+           throw new RuntimeException(e);
+        }
+//
+        req.setAttribute("categories", categories_names);
+        RequestDispatcher dispatcher = req.getRequestDispatcher("/show.jsp");
+        dispatcher.forward(req, resp);
+    }
+
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String fromDate = req.getParameter("from");
+        String toDate = req.getParameter("to");
+        String[] category_name = req.getParameterValues("categories");
+        String operaionType = req.getParameter("operation");
+
+
+        try {
+            Class.forName("org.postgresql.Driver");
+            dbManager = DatabaseManager.getInstance(url,user,password);
+            records = DatabaseManager.toArrayList(dbManager.selectRecords(fromDate,toDate,category_name,operaionType));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        request.setAttribute("users", records);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/show.jsp");
-        dispatcher.forward(request, response);
+        req.setAttribute("users", records);
+        req.setAttribute("categories", categories_names);
+        RequestDispatcher dispatcher = req.getRequestDispatcher("/show.jsp");
+        dispatcher.forward(req, resp);
+
+
     }
 }

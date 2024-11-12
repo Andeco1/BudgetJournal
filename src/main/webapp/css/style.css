@@ -35,6 +35,11 @@ article .table{
   flex-direction: row;
   text-align:center;
 }
+article .statistics{
+  display: flex;
+  flex-direction: row;
+  text-align:center;
+}
 table{
  margin: 0 auto;
  width: 92%;

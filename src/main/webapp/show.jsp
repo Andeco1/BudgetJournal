@@ -33,11 +33,11 @@
       <td>Дата</td>
       <td>Сумма</td>
     </tr>
-  <c:forEach items="${users}" var = "user">
+  <c:forEach items="${records}" var = "record">
       <tr>
-        <td>${user.getCategory_name()}</td>
-        <td>${user.getOperation_date()}</td>
-        <td>${user.getTotal()}</td>
+        <td>${record.getCategory_name()}</td>
+        <td>${record.getOperation_date()}</td>
+        <td>${record.getTotal()}</td>
       </tr>
   </c:forEach>
   </table>
@@ -46,21 +46,22 @@
 <section class ="right_part">
 <article class="statistics">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <canvas id="myChart" width="400" height="200"></canvas>
-    <script>
+  <c:if test = "${not empty statistics_percentage}">
+  <canvas id="creditingChart" width="400" height="200"></canvas>
+  <script>
         var labels = [
-              <c:forEach var="category" items="${categories}" varStatus="status">
+              <c:forEach var="category" items="${statistics_categories_names}" varStatus="status">
                   '${category}'<c:if test="${!status.last}">,</c:if>
               </c:forEach>
         ];
-        var dataPoints = [10, 20, 30, 25, 50, 40,20,33,1];
-        var ctx = document.getElementById('myChart').getContext('2d');
+        var dataPoints = ${statistics_percentage}
+        var ctx = document.getElementById('creditingChart').getContext('2d');
         var myChart = new Chart(ctx, {
             type: 'pie',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Пользователи',
+                    label: 'Итого по операциям:',
                     data: dataPoints,
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     borderColor: 'rgba(75, 192, 192, 1)',
@@ -68,7 +69,52 @@
                 }]
             }
         });
-    </script>
+  </script>
+    <canvas id="myChart" width="600" height="500"></canvas>
+   <script>
+         var categories = [
+                 <c:forEach var="category" items="${categories_names}" varStatus="status">
+                     '${category}'<c:if test="${!status.last}">,</c:if>
+                 </c:forEach>
+        ];
+        var labels = [<c:forEach var="date" items="${statistics_dates}" varStatus="status">'${date}'<c:if test="${!status.last}">,</c:if></c:forEach>];
+        var datasets = [];
+        var colors = [
+            'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(199, 199, 199, 1)'
+        ];
+        var colorIndex = 0;
+        <c:forEach var="category_id" items="${categories_id}">
+            var data = [<c:forEach var="dataPoint" items="${categoryData[category_id]}">${dataPoint}<c:if test="${!status.last}">,</c:if></c:forEach>];
+            datasets.push({
+                label: '${categories[category_id]}',
+                data: data,
+                borderColor: colors[colorIndex % colors.length],
+                backgroundColor: colors[colorIndex % colors.length].replace('1)', '0.2)'),
+                borderWidth: 2,
+                fill: false
+            });
+            colorIndex++;
+        </c:forEach>
+
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+   </script>
+  </c:if>
 </article>
 </section>
 </body>

@@ -32,16 +32,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    command: >
-      bash -c "
-        echo 'Waiting for PostgreSQL to start...' &&
-        while ! pg_isready -U postgres; do
-          sleep 1
-        done &&
-        echo 'PostgreSQL started' &&
-        psql -U postgres -d budget_journal -f /docker-entrypoint-initdb.d/init.sql &&
-        postgres
-      "
+      start_period: 10s
 
 volumes:
   postgres_data: 

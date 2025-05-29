@@ -20,6 +20,9 @@
                     <div class="form-group">
                         <label for="category">Категория:</label>
                         <select name="category" id="category" required>
+                            <c:if test="${empty categories}">
+                                <option value="">Нет доступных категорий</option>
+                            </c:if>
                             <c:forEach items="${categories}" var="category">
                                 <option value="${category}">${category}</option>
                             </c:forEach>
@@ -60,6 +63,9 @@
                     <div class="form-group">
                         <label>Категории:</label>
                         <div class="checkbox-group">
+                            <c:if test="${empty categories}">
+                                <p>Нет доступных категорий</p>
+                            </c:if>
                             <c:forEach items="${categories}" var="category">
                                 <label>
                                     <input type="checkbox" name="categories" value="${category}"> ${category}
@@ -97,6 +103,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <c:if test="${empty records}">
+                            <tr>
+                                <td colspan="4">Нет записей</td>
+                            </tr>
+                        </c:if>
                         <c:forEach items="${records}" var="record">
                             <tr>
                                 <td>${record.operation ? 'Расход' : 'Доход'}</td>
@@ -126,6 +137,13 @@
     </div>
 
     <script>
+        // Debug information
+        console.log('Categories:', ${categories});
+        console.log('Statistics Categories:', ${statistics_categories_names});
+        console.log('Statistics Percentage:', ${statistics_percentage});
+        console.log('Statistics Dates:', ${statistics_dates});
+        console.log('Category Data:', ${categoryData});
+
         // Pie Chart
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         new Chart(pieCtx, {

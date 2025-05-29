@@ -19,21 +19,8 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Копируем файл с переменными окружения
-COPY .env /usr/local/tomcat/conf/
-
-# Создаем скрипт для запуска
-RUN echo '#!/bin/sh\n\
-echo "Setting up environment variables..."\n\
-if [ -f /usr/local/tomcat/conf/.env ]; then\n\
-    export $(cat /usr/local/tomcat/conf/.env | xargs)\n\
-fi\n\
-echo "Starting Tomcat..."\n\
-catalina.sh run' > /usr/local/tomcat/bin/start.sh && \
-    chmod +x /usr/local/tomcat/bin/start.sh
-
 # Открываем порт
 EXPOSE 8080
 
 # Запускаем Tomcat
-CMD ["/usr/local/tomcat/bin/start.sh"] 
+CMD ["catalina.sh", "run"] 

@@ -240,4 +240,29 @@ public class DatabaseManager {
         }
         return records;
     }
+
+    public void addRecord(String categoryName, String date, float total, boolean isExpense) throws SQLException {
+        // First get the category ID
+        String getCategoryId = "SELECT id_category FROM budget_journal.categories WHERE category_name = ?";
+        int categoryId;
+        
+        try (PreparedStatement pstmt = connection.prepareStatement(getCategoryId)) {
+            pstmt.setString(1, categoryName);
+            ResultSet rs = pstmt.executeQuery();
+            if (!rs.next()) {
+                throw new SQLException("Category not found: " + categoryName);
+            }
+            categoryId = rs.getInt(1);
+        }
+
+        // Insert the new record
+        String insertRecord = "INSERT INTO budget_journal.records (operation, id_category, date_operation, total) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(insertRecord)) {
+            pstmt.setBoolean(1, isExpense);
+            pstmt.setInt(2, categoryId);
+            pstmt.setDate(3, java.sql.Date.valueOf(date));
+            pstmt.setFloat(4, total);
+            pstmt.executeUpdate();
+        }
+    }
 }

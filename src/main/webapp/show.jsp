@@ -9,35 +9,79 @@
     <style>
         <%@include file='css/style.css' %>
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <section class="left_part">
             <article class="form">
-                <h2>Фильтры</h2>
-                <form action="" method="post">
-                    <div>Период</div>
-                    <input type="date" name="from" value="${param.from}" placeholder="yyyy-mm-dd">
-                    <input type="date" name="to" value="${param.to}" placeholder="yyyy-mm-dd">
-                    
-                    <div>Категории</div>
-                    <div class="categories-grid">
-                        <c:forEach var="category" items="${categories}">
-                            <label class="category-label">
-                                <input type="checkbox" name="categories" value="${category}">
-                                <span>${category}</span>
-                            </label>
-                        </c:forEach>
+                <h2>Add New Record</h2>
+                <form action="addRecord" method="post" class="add-record-form">
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select name="category" id="category" required>
+                            <c:forEach items="${categories}" var="category">
+                                <option value="${category}">${category}</option>
+                            </c:forEach>
+                        </select>
                     </div>
-                    
-                    <div>Тип операции</div>
-                    <select name="operation" id="operation">
-                        <option value="any">Любой</option>
-                        <option value="+">Пополнение</option>
-                        <option value="-">Списание</option>
-                    </select>
-                    
-                    <input type="submit" value="Применить фильтры">
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" name="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="total">Amount:</label>
+                        <input type="number" name="total" id="total" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Operation Type:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="operation" value="income" checked> Income
+                            </label>
+                            <label>
+                                <input type="radio" name="operation" value="expense"> Expense
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Add Record</button>
+                </form>
+
+                <h2>Filter Records</h2>
+                <form action="main" method="post">
+                    <div class="form-group">
+                        <label for="from">From:</label>
+                        <input type="date" name="from" id="from">
+                    </div>
+                    <div class="form-group">
+                        <label for="to">To:</label>
+                        <input type="date" name="to" id="to">
+                    </div>
+                    <div class="form-group">
+                        <label>Categories:</label>
+                        <div class="checkbox-group">
+                            <c:forEach items="${categories}" var="category">
+                                <label>
+                                    <input type="checkbox" name="categories" value="${category}"> ${category}
+                                </label>
+                            </c:forEach>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Operation Type:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="operation" value="any" checked> Any
+                            </label>
+                            <label>
+                                <input type="radio" name="operation" value="+"> Income
+                            </label>
+                            <label>
+                                <input type="radio" name="operation" value="-"> Expense
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Apply Filter</button>
                 </form>
             </article>
             
@@ -67,123 +111,83 @@
         <section class="right_part">
             <article class="statistics">
                 <h2>Статистика</h2>
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <c:if test="${not empty statistics_percentage}">
-                    <div class="chart-container">
-                        <canvas id="creditingChart"></canvas>
+                <div class="charts-container">
+                    <div class="chart">
+                        <canvas id="pieChart"></canvas>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="myChart"></canvas>
+                    <div class="chart">
+                        <canvas id="lineChart"></canvas>
                     </div>
-                    <script>
-                        var labels = [
-                            <c:forEach var="category" items="${statistics_categories_names}" varStatus="status">
-                                '${category}'<c:if test="${!status.last}">,</c:if>
-                            </c:forEach>
-                        ];
-                        var dataPoints = ${statistics_percentage}
-                        var ctx = document.getElementById('creditingChart').getContext('2d');
-                        var myChart = new Chart(ctx, {
-                            type: 'pie',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: 'Итого по операциям:',
-                                    data: dataPoints,
-                                    backgroundColor: [
-                                        'rgba(255, 99, 132, 0.2)',
-                                        'rgba(54, 162, 235, 0.2)',
-                                        'rgba(255, 206, 86, 0.2)',
-                                        'rgba(75, 192, 192, 0.2)',
-                                        'rgba(153, 102, 255, 0.2)',
-                                        'rgba(255, 159, 64, 0.2)'
-                                    ],
-                                    borderColor: [
-                                        'rgba(255, 99, 132, 1)',
-                                        'rgba(54, 162, 235, 1)',
-                                        'rgba(255, 206, 86, 1)',
-                                        'rgba(75, 192, 192, 1)',
-                                        'rgba(153, 102, 255, 1)',
-                                        'rgba(255, 159, 64, 1)'
-                                    ],
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                    },
-                                    title: {
-                                        display: true,
-                                        text: 'Распределение по категориям'
-                                    }
-                                }
-                            }
-                        });
-
-                        var categories = [
-                            <c:forEach var="category" items="${categories_names}" varStatus="status">
-                                '${category}'<c:if test="${!status.last}">,</c:if>
-                            </c:forEach>
-                        ];
-                        
-                        var datasets = [];
-                        var colors = [
-                            'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'
-                        ];
-                        var colorIndex = 0;
-                        <c:forEach var="category_id" items="${categories_id}">
-                            var data = [<c:forEach var="dataPoint" items="${categoryData[category_id]}">${dataPoint}<c:if test="${!status.last}">,</c:if></c:forEach>];
-                            datasets.push({
-                                label: '${categories[category_id]}',
-                                data: data,
-                                borderColor: colors[colorIndex % colors.length],
-                                backgroundColor: colors[colorIndex % colors.length].replace('1)', '0.2)'),
-                                borderWidth: 2,
-                                fill: false
-                            });
-                            colorIndex++;
-                        </c:forEach>
-
-                        var ctx = document.getElementById('myChart').getContext('2d');
-                        var myChart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: labels,
-                                datasets: datasets
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: 'Динамика по категориям'
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        title: {
-                                            display: true,
-                                            text: 'Сумма'
-                                        }
-                                    },
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Дата'
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    </script>
-                </c:if>
+                </div>
             </article>
         </section>
     </div>
+
+    <script>
+        // Pie Chart
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ${statistics_categories_names},
+                datasets: [{
+                    data: ${statistics_percentage},
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Category Distribution'
+                    }
+                }
+            }
+        });
+
+        // Line Chart
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ${statistics_dates},
+                datasets: ${categories_names}.map((category, index) => ({
+                    label: category,
+                    data: ${categoryData}[index],
+                    borderColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40'
+                    ][index % 6],
+                    fill: false
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Category Trends'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

@@ -17,7 +17,7 @@
 
     <servlet-mapping>
         <servlet-name>MainPageServlet</servlet-name>
-        <url-pattern>/</url-pattern>
+        <url-pattern>/main</url-pattern>
     </servlet-mapping>
 
     <servlet>
@@ -27,7 +27,7 @@
 
     <servlet-mapping>
         <servlet-name>AddRecordServlet</servlet-name>
-        <url-pattern>/add</url-pattern>
+        <url-pattern>/addRecord</url-pattern>
     </servlet-mapping>
 
     <servlet>

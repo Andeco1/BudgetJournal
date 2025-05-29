@@ -1,17 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
-            http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
-  <display-name>WebApp</display-name>
+            http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    <display-name>Budget Journal</display-name>
 
-  <servlet>
-    <servlet-name>MainServlet</servlet-name>
-    <servlet-class>servlets.MainPageServlet</servlet-class>
-  </servlet>
+    <welcome-file-list>
+        <welcome-file>show.jsp</welcome-file>
+    </welcome-file-list>
 
-  <servlet-mapping>
-    <servlet-name>MainServlet</servlet-name>
-    <url-pattern>/</url-pattern>
-  </servlet-mapping>
+    <servlet>
+        <servlet-name>MainPageServlet</servlet-name>
+        <servlet-class>servlets.MainPageServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>MainPageServlet</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AddRecordServlet</servlet-name>
+        <servlet-class>servlets.AddRecordServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AddRecordServlet</servlet-name>
+        <url-pattern>/add</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AddCategoryServlet</servlet-name>
+        <servlet-class>servlets.AddCategoryServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>AddCategoryServlet</servlet-name>
+        <url-pattern>/addCategory</url-pattern>
+    </servlet-mapping>
 </web-app>

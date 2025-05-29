@@ -45,7 +45,7 @@ public class DatabaseManager {
         return instance;
     }
 
-    private void connect() throws SQLException {
+    private Connection connect() throws SQLException {
         try {
             logger.info("Connecting to database: " + url);
             connection = DriverManager.getConnection(url, user, password);
@@ -75,6 +75,8 @@ public class DatabaseManager {
                     logger.info("Successfully accessed categories table. Found " + count + " categories.");
                 }
             }
+            
+            return connection;
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed to connect to database: " + e.getMessage(), e);
             throw new SQLException("Failed to connect to database", e);
@@ -294,24 +296,24 @@ public class DatabaseManager {
             // First, get the category ID
             int categoryId;
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "SELECT id FROM categories WHERE name = ?")) {
+                    "SELECT id_category FROM " + schema + ".categories WHERE category_name = ?")) {
                 pstmt.setString(1, category);
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (!rs.next()) {
                         logger.severe("Category not found: " + category);
                         throw new SQLException("Category not found: " + category);
                     }
-                    categoryId = rs.getInt("id");
+                    categoryId = rs.getInt("id_category");
                 }
             }
 
             // Then insert the record
             try (PreparedStatement pstmt = conn.prepareStatement(
-                    "INSERT INTO records (category_id, date, total, is_expense) VALUES (?, ?, ?, ?)")) {
-                pstmt.setInt(1, categoryId);
-                pstmt.setDate(2, Date.valueOf(date));
-                pstmt.setFloat(3, total);
-                pstmt.setBoolean(4, isExpense);
+                    "INSERT INTO " + schema + ".records (operation, id_category, date_operation, total) VALUES (?, ?, ?, ?)")) {
+                pstmt.setBoolean(1, isExpense);
+                pstmt.setInt(2, categoryId);
+                pstmt.setDate(3, Date.valueOf(date));
+                pstmt.setFloat(4, total);
                 pstmt.executeUpdate();
                 logger.info("Record added successfully");
             }

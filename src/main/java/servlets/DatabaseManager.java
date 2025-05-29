@@ -287,28 +287,34 @@ public class DatabaseManager {
         return records;
     }
 
-    public void addRecord(String categoryName, String date, float total, boolean isExpense) throws SQLException {
-        // First get the category ID
-        String getCategoryId = "SELECT id_category FROM budget_journal.categories WHERE category_name = ?";
-        int categoryId;
+    public void addRecord(String category, String date, float total, boolean isExpense) throws SQLException {
+        logger.info("Adding record: category=" + category + ", date=" + date + ", total=" + total + ", isExpense=" + isExpense);
         
-        try (PreparedStatement pstmt = connection.prepareStatement(getCategoryId)) {
-            pstmt.setString(1, categoryName);
-            ResultSet rs = pstmt.executeQuery();
-            if (!rs.next()) {
-                throw new SQLException("Category not found: " + categoryName);
+        try (Connection conn = connect()) {
+            // First, get the category ID
+            int categoryId;
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "SELECT id FROM categories WHERE name = ?")) {
+                pstmt.setString(1, category);
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (!rs.next()) {
+                        logger.severe("Category not found: " + category);
+                        throw new SQLException("Category not found: " + category);
+                    }
+                    categoryId = rs.getInt("id");
+                }
             }
-            categoryId = rs.getInt(1);
-        }
 
-        // Insert the new record
-        String insertRecord = "INSERT INTO budget_journal.records (operation, id_category, date_operation, total) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(insertRecord)) {
-            pstmt.setBoolean(1, isExpense);
-            pstmt.setInt(2, categoryId);
-            pstmt.setDate(3, java.sql.Date.valueOf(date));
-            pstmt.setFloat(4, total);
-            pstmt.executeUpdate();
+            // Then insert the record
+            try (PreparedStatement pstmt = conn.prepareStatement(
+                    "INSERT INTO records (category_id, date, total, is_expense) VALUES (?, ?, ?, ?)")) {
+                pstmt.setInt(1, categoryId);
+                pstmt.setDate(2, Date.valueOf(date));
+                pstmt.setFloat(3, total);
+                pstmt.setBoolean(4, isExpense);
+                pstmt.executeUpdate();
+                logger.info("Record added successfully");
+            }
         }
     }
 }

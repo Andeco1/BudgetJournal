@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ru">
@@ -16,7 +16,7 @@
         <section class="left_part">
             <article class="form">
                 <h2>Добавить запись</h2>
-                <form action="addRecord" method="post" class="add-record-form">
+                <form action="addRecord" method="post" accept-charset="UTF-8" class="add-record-form">
                     <div class="form-group">
                         <label for="category">Категория:</label>
                         <select name="category" id="category" required>

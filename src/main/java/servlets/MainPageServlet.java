@@ -38,6 +38,14 @@ public class MainPageServlet extends HttpServlet {
         logger.info("Database configuration loaded successfully");
         logger.info("DB_URL: " + url);
         logger.info("DB_USER: " + user);
+
+        try {
+            dbManager = DatabaseManager.getInstance(url, user, password);
+            logger.info("Database manager initialized successfully");
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to initialize database manager", e);
+            throw new ServletException("Failed to initialize database manager", e);
+        }
     }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -45,7 +53,6 @@ public class MainPageServlet extends HttpServlet {
         logger.info("Processing GET request");
 
         try {
-            dbManager = DatabaseManager.getInstance(url, user, password);
             categories_names = dbManager.selectAllCategories();
             logger.info("Categories loaded successfully. Count: " + categories_names.size());
             
@@ -81,7 +88,6 @@ public class MainPageServlet extends HttpServlet {
             ArrayList<String> dates_operation;
             ArrayList<String> categories;
 
-            dbManager = DatabaseManager.getInstance(url, user, password);
             records = DatabaseManager.toArrayList(dbManager.selectRecords(fromDate, toDate, category_name, operationType));
             statistics_pie_chart = dbManager.getPercentage(fromDate, toDate, category_name, operationType);
             statistics_line_chart = dbManager.getStatistics(fromDate, toDate, category_name);

@@ -4,14 +4,27 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class DatabaseManager {
+    private static final Logger logger = Logger.getLogger(DatabaseManager.class.getName());
     private static DatabaseManager instance;
     private Connection connection;
     private String url;
     private String user;
     private String password;
     private String schema;
+
+    static {
+        try {
+            Class.forName("org.postgresql.Driver");
+            logger.info("PostgreSQL driver loaded successfully");
+        } catch (ClassNotFoundException e) {
+            logger.severe("Failed to load PostgreSQL driver: " + e.getMessage());
+            throw new RuntimeException("Failed to load PostgreSQL driver", e);
+        }
+    }
 
     private DatabaseManager(String url, String user, String password) throws SQLException {
         this.url = url;
@@ -21,6 +34,7 @@ public class DatabaseManager {
         if (this.schema == null) {
             this.schema = "budget_journal";
         }
+        logger.info("Initializing DatabaseManager with schema: " + this.schema);
         connect();
     }
 
@@ -33,12 +47,36 @@ public class DatabaseManager {
 
     private void connect() throws SQLException {
         try {
+            logger.info("Connecting to database: " + url);
             connection = DriverManager.getConnection(url, user, password);
+            
+            // Verify connection
+            if (connection == null || connection.isClosed()) {
+                throw new SQLException("Failed to establish database connection");
+            }
+            
             // Set the search path to our schema
             try (Statement stmt = connection.createStatement()) {
+                // First check if schema exists
+                ResultSet rs = stmt.executeQuery("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '" + schema + "'");
+                if (!rs.next()) {
+                    logger.warning("Schema " + schema + " does not exist, attempting to create it");
+                    stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schema);
+                }
+                
+                // Set search path
                 stmt.execute("SET search_path TO " + schema);
+                logger.info("Search path set to: " + schema);
+                
+                // Verify we can access the categories table
+                rs = stmt.executeQuery("SELECT COUNT(*) FROM " + schema + ".categories");
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    logger.info("Successfully accessed categories table. Found " + count + " categories.");
+                }
             }
         } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to connect to database: " + e.getMessage(), e);
             throw new SQLException("Failed to connect to database", e);
         }
     }
@@ -204,13 +242,21 @@ public class DatabaseManager {
         return date_operatiions;
     }
     public ArrayList<String> selectAllCategories() throws SQLException {
-        Statement statement = this.connection.createStatement();
-        ResultSet results = statement.executeQuery("SELECT category_name FROM budget_journal.categories");
-        ArrayList<String> categories_names = new ArrayList<>();
-        while (results.next()) {
-            categories_names.add(results.getString(1));
+        logger.info("Fetching all categories from database");
+        try (Statement statement = this.connection.createStatement()) {
+            ResultSet results = statement.executeQuery("SELECT category_name FROM " + schema + ".categories ORDER BY category_name");
+            ArrayList<String> categories_names = new ArrayList<>();
+            while (results.next()) {
+                String category = results.getString(1);
+                categories_names.add(category);
+                logger.fine("Found category: " + category);
+            }
+            logger.info("Total categories found: " + categories_names.size());
+            return categories_names;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error fetching categories: " + e.getMessage(), e);
+            throw e;
         }
-        return categories_names;
     }
     public ArrayList<String> selectCategories(String[] category_names) throws SQLException {
         Statement statement = this.connection.createStatement();

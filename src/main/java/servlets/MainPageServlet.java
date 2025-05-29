@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class MainPageServlet extends HttpServlet {
 
 
-    String url = "jdbc:postgresql://localhost:5432/Records";
+    String url = "jdbc:postgresql://localhost:5432/Records?currentSchema=budget_journal";
     String user = "postgres";
     String password = "@Ynik2005";
     private DatabaseManager dbManager;

@@ -12,12 +12,15 @@ public class DatabaseManager {
     private String URL;
     private String USER;
     private String PASSWORD;
+    private static final String SCHEMA = "budget_journal";
 
     private DatabaseManager(String url, String user, String password) throws SQLException {
         this.URL = url;
         this.USER = user;
         this.PASSWORD = password;
         this.connection = DriverManager.getConnection(url, user, password);
+        Statement stmt = connection.createStatement();
+        stmt.execute("SET search_path TO " + SCHEMA);
     }
 
     public static DatabaseManager getInstance(String url, String user, String password) throws SQLException {
@@ -65,7 +68,7 @@ public class DatabaseManager {
 //            Float total = results.getFloat(5);
 //            System.out.println("" + id + " " + name + " " + id_cat + " " + String.valueOf(date) + " " + total);
 //        }
-        return statement.executeQuery("SELECT * FROM public.records INNER JOIN public.categories ON records.id_category = categories.id_category" +
+        return statement.executeQuery("SELECT * FROM budget_journal.records INNER JOIN budget_journal.categories ON records.id_category = categories.id_category" +
                 " WHERE date_operation>='" + from_date + "' AND date_operation<='" + to_date + "'" +"AND category_name in (" + category_namesString.toString() +")"+operaion);
     }
 
@@ -96,7 +99,7 @@ public class DatabaseManager {
 //            Float total = results.getFloat(5);
 //            System.out.println("" + id + " " + name + " " + id_cat + " " + String.valueOf(date) + " " + total);
 //        }
-        return statement.executeQuery("SELECT * FROM public.records INNER JOIN public.categories ON records.id_category = categories.id_category" +
+        return statement.executeQuery("SELECT * FROM budget_journal.records INNER JOIN budget_journal.categories ON records.id_category = categories.id_category" +
                 " WHERE date_operation>='" + from_date + "' AND date_operation<='" + to_date + "'");
     }
 
@@ -136,7 +139,7 @@ public class DatabaseManager {
 //            Float total = results.getFloat(5);
 //            System.out.println("" + id + " " + name + " " + id_cat + " " + String.valueOf(date) + " " + total);
 //        }
-        return statement.executeQuery("SELECT category_name, sum(total) from public.records inner join public.categories on records.id_category = "+
+        return statement.executeQuery("SELECT category_name, sum(total) from budget_journal.records inner join budget_journal.categories on records.id_category = "+
                 "categories.id_category"+
                 " WHERE date_operation>='" + from_date + "' AND date_operation<='" + to_date + "'" +
                 "AND category_name in (" + category_namesString.toString() +")"+operaion+
@@ -160,7 +163,7 @@ public class DatabaseManager {
         for(int i = 0; i<category_names.length; i++){
             ArrayList<Float>  new_category = new ArrayList<Float>(dates.size());
             { for (int p = 0; p < dates.size(); p++) new_category.add(0f);}
-            ResultSet resultSet = statement.executeQuery("SELECT date_operation, total FROM public.records INNER JOIN public.categories ON records.id_category = categories.id_category" +
+            ResultSet resultSet = statement.executeQuery("SELECT date_operation, total FROM budget_journal.records INNER JOIN budget_journal.categories ON records.id_category = categories.id_category" +
                     " WHERE date_operation>='" + from_date + "' AND date_operation<='" + to_date + "'" +"AND category_name in ('" + category_names[i] +"')");
             Float intotal;
             while(resultSet.next()){
@@ -181,7 +184,7 @@ public class DatabaseManager {
             to_date = "2024-08-11";
         }
         ArrayList<String> date_operatiions = new ArrayList<>();
-        ResultSet resultSet = statement.executeQuery("SELECT date_operation FROM public.records INNER JOIN public.categories ON records.id_category = categories.id_category" +
+        ResultSet resultSet = statement.executeQuery("SELECT date_operation FROM budget_journal.records INNER JOIN budget_journal.categories ON records.id_category = categories.id_category" +
                 " WHERE date_operation>='" + from_date + "' AND date_operation<='" + to_date + "' order by date_operation");
         while(resultSet.next()){
             date_operatiions.add(resultSet.getString(1));
@@ -190,7 +193,7 @@ public class DatabaseManager {
     }
     public ArrayList<String> selectAllCategories() throws SQLException {
         Statement statement = this.connection.createStatement();
-        ResultSet results = statement.executeQuery("SELECT category_name FROM public.categories");
+        ResultSet results = statement.executeQuery("SELECT category_name FROM budget_journal.categories");
         ArrayList<String> categories_names = new ArrayList<>();
         while (results.next()) {
             categories_names.add(results.getString(1));
@@ -204,7 +207,7 @@ public class DatabaseManager {
             category_namesString.append("'").append(category_names[i]).append("',");
         }
         category_namesString.deleteCharAt(category_namesString.length()-1);
-        ResultSet results = statement.executeQuery("SELECT category_name FROM public.categories"+" where category_name in (" + category_namesString.toString() +")");
+        ResultSet results = statement.executeQuery("SELECT category_name FROM budget_journal.categories"+" where category_name in (" + category_namesString.toString() +")");
         ArrayList<String> categories_names = new ArrayList<>();
         while (results.next()) {
             categories_names.add(results.getString(1));

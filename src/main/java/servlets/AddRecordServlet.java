@@ -21,7 +21,7 @@ public class AddRecordServlet extends HttpServlet {
         password = System.getenv("DB_PASSWORD");
         
         if (url == null || user == null || password == null) {
-            throw new ServletException("Database configuration not found in environment variables");
+            throw new ServletException("Не найдена конфигурация базы данных в переменных окружения");
         }
     }
 
@@ -44,7 +44,9 @@ public class AddRecordServlet extends HttpServlet {
             // Redirect back to main page
             response.sendRedirect(request.getContextPath() + "/");
         } catch (SQLException e) {
-            throw new ServletException("Error adding record", e);
+            throw new ServletException("Ошибка при добавлении записи", e);
+        } catch (NumberFormatException e) {
+            throw new ServletException("Неверный формат суммы", e);
         }
     }
 } 

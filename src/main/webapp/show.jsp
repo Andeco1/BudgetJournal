@@ -15,10 +15,10 @@
     <div class="container">
         <section class="left_part">
             <article class="form">
-                <h2>Add New Record</h2>
+                <h2>Добавить запись</h2>
                 <form action="addRecord" method="post" class="add-record-form">
                     <div class="form-group">
-                        <label for="category">Category:</label>
+                        <label for="category">Категория:</label>
                         <select name="category" id="category" required>
                             <c:forEach items="${categories}" var="category">
                                 <option value="${category}">${category}</option>
@@ -26,39 +26,39 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="date">Date:</label>
+                        <label for="date">Дата:</label>
                         <input type="date" name="date" id="date" required>
                     </div>
                     <div class="form-group">
-                        <label for="total">Amount:</label>
+                        <label for="total">Сумма:</label>
                         <input type="number" name="total" id="total" step="0.01" required>
                     </div>
                     <div class="form-group">
-                        <label>Operation Type:</label>
+                        <label>Тип операции:</label>
                         <div class="radio-group">
                             <label>
-                                <input type="radio" name="operation" value="income" checked> Income
+                                <input type="radio" name="operation" value="income" checked> Доход
                             </label>
                             <label>
-                                <input type="radio" name="operation" value="expense"> Expense
+                                <input type="radio" name="operation" value="expense"> Расход
                             </label>
                         </div>
                     </div>
-                    <button type="submit" class="btn">Add Record</button>
+                    <button type="submit" class="btn">Добавить</button>
                 </form>
 
-                <h2>Filter Records</h2>
+                <h2>Фильтры</h2>
                 <form action="main" method="post">
                     <div class="form-group">
-                        <label for="from">From:</label>
+                        <label for="from">От:</label>
                         <input type="date" name="from" id="from">
                     </div>
                     <div class="form-group">
-                        <label for="to">To:</label>
+                        <label for="to">До:</label>
                         <input type="date" name="to" id="to">
                     </div>
                     <div class="form-group">
-                        <label>Categories:</label>
+                        <label>Категории:</label>
                         <div class="checkbox-group">
                             <c:forEach items="${categories}" var="category">
                                 <label>
@@ -68,20 +68,20 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Operation Type:</label>
+                        <label>Тип операции:</label>
                         <div class="radio-group">
                             <label>
-                                <input type="radio" name="operation" value="any" checked> Any
+                                <input type="radio" name="operation" value="any" checked> Любой
                             </label>
                             <label>
-                                <input type="radio" name="operation" value="+"> Income
+                                <input type="radio" name="operation" value="+"> Доход
                             </label>
                             <label>
-                                <input type="radio" name="operation" value="-"> Expense
+                                <input type="radio" name="operation" value="-"> Расход
                             </label>
                         </div>
                     </div>
-                    <button type="submit" class="btn">Apply Filter</button>
+                    <button type="submit" class="btn">Применить фильтры</button>
                 </form>
             </article>
             
@@ -90,6 +90,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Тип</th>
                             <th>Категория</th>
                             <th>Дата</th>
                             <th>Сумма</th>
@@ -98,9 +99,10 @@
                     <tbody>
                         <c:forEach items="${records}" var="record">
                             <tr>
-                                <td>${record.getCategory_name()}</td>
-                                <td>${record.getOperation_date()}</td>
-                                <td>${record.getTotal()}</td>
+                                <td>${record.operation ? 'Расход' : 'Доход'}</td>
+                                <td>${record.category_name}</td>
+                                <td>${record.operation_date}</td>
+                                <td>${record.total}</td>
                             </tr>
                         </c:forEach>
                     </tbody>
@@ -147,7 +149,7 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Category Distribution'
+                        text: 'Распределение по категориям'
                     }
                 }
             }
@@ -178,12 +180,22 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Category Trends'
+                        text: 'Динамика по категориям'
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Сумма'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Дата'
+                        }
                     }
                 }
             }

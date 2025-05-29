@@ -42,9 +42,16 @@ public class MainPageServlet extends HttpServlet {
         try {
             dbManager = DatabaseManager.getInstance(url, user, password);
             logger.info("Database manager initialized successfully");
+
+            categories_names = dbManager.selectAllCategories();
+            logger.info("Categories loaded successfully during initialization. Count: " + categories_names.size());
+            
+            if (categories_names.isEmpty()) {
+                logger.warning("No categories found in the database during initialization");
+            }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Failed to initialize database manager", e);
-            throw new ServletException("Failed to initialize database manager", e);
+            logger.log(Level.SEVERE, "Failed to initialize database or load categories", e);
+            throw new ServletException("Failed to initialize database or load categories", e);
         }
     }
 
@@ -54,14 +61,10 @@ public class MainPageServlet extends HttpServlet {
 
         try {
             categories_names = dbManager.selectAllCategories();
-            logger.info("Categories loaded successfully. Count: " + categories_names.size());
-            
-            if (categories_names.isEmpty()) {
-                logger.warning("No categories found in the database");
-            }
+            logger.info("Categories refreshed. Count: " + categories_names.size());
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Database error while loading categories: " + e.getMessage(), e);
-            throw new ServletException("Database error while loading categories", e);
+            logger.log(Level.SEVERE, "Database error while refreshing categories: " + e.getMessage(), e);
+            throw new ServletException("Database error while refreshing categories", e);
         }
 
         req.setAttribute("categories", categories_names);
@@ -77,8 +80,8 @@ public class MainPageServlet extends HttpServlet {
         
         try {
             if (category_name == null) {
-                logger.info("No categories selected, loading all categories");
-                category_name = dbManager.selectAllCategories().toArray(new String[0]);
+                logger.info("No categories selected, using all categories");
+                category_name = categories_names.toArray(new String[0]);
             }
             
             String operationType = req.getParameter("operation");

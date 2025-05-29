@@ -2,17 +2,19 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       - DB_URL=jdbc:postgresql://db:5432/budget_journal
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_SCHEMA=budget_journal
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
       - ./logs:/usr/local/tomcat/logs
 
@@ -26,13 +28,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 10s
 
 volumes:
   postgres_data: 

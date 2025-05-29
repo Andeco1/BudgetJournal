@@ -14,26 +14,36 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public class MainPageServlet extends HttpServlet {
-
-
-    String url = "jdbc:postgresql://localhost:5432/Records?currentSchema=budget_journal";
-    String user = "postgres";
-    String password = "postgres";
+    private String url;
+    private String user;
+    private String password;
     private DatabaseManager dbManager;
     private ArrayList<Record> records;
-    private  ArrayList<String> categories_names;
+    private ArrayList<String> categories_names;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        url = System.getenv("DB_URL");
+        user = System.getenv("DB_USER");
+        password = System.getenv("DB_PASSWORD");
+        
+        if (url == null || user == null || password == null) {
+            throw new ServletException("Database configuration not found in environment variables");
+        }
+    }
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html");
 
         try {
             Class.forName("org.postgresql.Driver");
-            dbManager = DatabaseManager.getInstance(url,user,password);
+            dbManager = DatabaseManager.getInstance(url, user, password);
             categories_names = dbManager.selectAllCategories();
         } catch (SQLException | ClassNotFoundException e) {
            throw new RuntimeException(e);
         }
-//
+
         req.setAttribute("categories", categories_names);
         RequestDispatcher dispatcher = req.getRequestDispatcher("/show.jsp");
         dispatcher.forward(req, resp);
@@ -58,7 +68,7 @@ public class MainPageServlet extends HttpServlet {
         ArrayList<String> categories;
         try {
             Class.forName("org.postgresql.Driver");
-            dbManager = DatabaseManager.getInstance(url,user,password);
+            dbManager = DatabaseManager.getInstance(url, user, password);
             records = DatabaseManager.toArrayList(dbManager.selectRecords(fromDate,toDate,category_name,operationType));
             statistics_pie_chart = dbManager.getPercentage(fromDate,toDate,category_name,operationType);
             statistics_line_chart = dbManager.getStatistics(fromDate,toDate,category_name);
@@ -83,11 +93,7 @@ public class MainPageServlet extends HttpServlet {
         req.setAttribute("statistics_dates", dates_operation);
         req.setAttribute("categories_names", categories);
 
-
-
         RequestDispatcher dispatcher = req.getRequestDispatcher("/show.jsp");
         dispatcher.forward(req, resp);
-
-
     }
 }

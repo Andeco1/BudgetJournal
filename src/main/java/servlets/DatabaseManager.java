@@ -1,6 +1,5 @@
 package servlets;
 
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,26 +8,39 @@ import java.util.Objects;
 public class DatabaseManager {
     private static DatabaseManager instance;
     private Connection connection;
-    private String URL;
-    private String USER;
-    private String PASSWORD;
-    private static final String SCHEMA = "budget_journal";
+    private String url;
+    private String user;
+    private String password;
+    private String schema;
 
     private DatabaseManager(String url, String user, String password) throws SQLException {
-        this.URL = url;
-        this.USER = user;
-        this.PASSWORD = password;
-        this.connection = DriverManager.getConnection(url, user, password);
-        Statement stmt = connection.createStatement();
-        stmt.execute("SET search_path TO " + SCHEMA);
+        this.url = url;
+        this.user = user;
+        this.password = password;
+        this.schema = System.getenv("DB_SCHEMA");
+        if (this.schema == null) {
+            this.schema = "budget_journal";
+        }
+        connect();
     }
 
     public static DatabaseManager getInstance(String url, String user, String password) throws SQLException {
         if (instance == null) {
             instance = new DatabaseManager(url, user, password);
         }
-
         return instance;
+    }
+
+    private void connect() throws SQLException {
+        try {
+            connection = DriverManager.getConnection(url, user, password);
+            // Set the search path to our schema
+            try (Statement stmt = connection.createStatement()) {
+                stmt.execute("SET search_path TO " + schema);
+            }
+        } catch (SQLException e) {
+            throw new SQLException("Failed to connect to database", e);
+        }
     }
 
     public ResultSet selectRecords(String from_date, String to_date,String[] category_names, String operationType) throws SQLException {

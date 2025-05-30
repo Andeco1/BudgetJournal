@@ -17,6 +17,12 @@ services:
       - DB_SCHEMA=budget_journal
     volumes:
       - ./logs:/usr/local/tomcat/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: postgres:15
@@ -24,16 +30,27 @@ services:
       - POSTGRES_DB=budget_journal
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d budget_journal"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    command: >
+      bash -c "
+        echo 'Waiting for PostgreSQL to start...' &&
+        while ! pg_isready -U postgres; do
+          sleep 1
+        done &&
+        echo 'PostgreSQL started successfully' &&
+        postgres
+      "
 
 volumes:
   postgres_data: 

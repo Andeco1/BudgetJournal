@@ -186,4 +186,175 @@ public class DatabaseManager {
         }
         return records;
     }
+
+    public ArrayList<Integer> getPercentage(String from_date, String to_date, String[] category_names, String operationType) throws SQLException {
+        logger.info("Calculating percentages for categories");
+        ArrayList<Integer> percentages = new ArrayList<>();
+        
+        try (Connection conn = getConnection()) {
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT c.category_name, SUM(r.total) as total_amount ")
+                 .append("FROM ").append(schema).append(".records r ")
+                 .append("INNER JOIN ").append(schema).append(".categories c ON r.id_category = c.id_category ")
+                 .append("WHERE 1=1 ");
+
+            if (from_date != null && !from_date.isEmpty()) {
+                query.append("AND r.date_operation >= '").append(from_date).append("' ");
+            }
+            if (to_date != null && !to_date.isEmpty()) {
+                query.append("AND r.date_operation <= '").append(to_date).append("' ");
+            }
+            if (category_names != null && category_names.length > 0) {
+                query.append("AND c.category_name IN (");
+                for (int i = 0; i < category_names.length; i++) {
+                    query.append("'").append(category_names[i]).append("'");
+                    if (i < category_names.length - 1) {
+                        query.append(",");
+                    }
+                }
+                query.append(") ");
+            }
+            if (operationType != null && !operationType.equals("any")) {
+                query.append("AND r.operation = ").append(operationType.equals("-"));
+            }
+
+            query.append("GROUP BY c.category_name");
+
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(query.toString())) {
+                
+                float totalSum = 0;
+                ArrayList<Float> categoryTotals = new ArrayList<>();
+                
+                while (rs.next()) {
+                    float amount = rs.getFloat("total_amount");
+                    totalSum += amount;
+                    categoryTotals.add(amount);
+                }
+                
+                // Calculate percentages
+                for (Float amount : categoryTotals) {
+                    int percentage = Math.round((amount / totalSum) * 100);
+                    percentages.add(percentage);
+                }
+            }
+        }
+        
+        return percentages;
+    }
+
+    public ArrayList<ArrayList<Float>> getStatistics(String from_date, String to_date, String[] category_names) throws SQLException {
+        logger.info("Getting statistics for categories");
+        ArrayList<ArrayList<Float>> stats = new ArrayList<>();
+        
+        try (Connection conn = getConnection()) {
+            // Get all dates in range
+            ArrayList<String> dates = selectAllDates(from_date, to_date);
+            
+            // For each category, get daily totals
+            for (String category : category_names) {
+                ArrayList<Float> categoryStats = new ArrayList<>(dates.size());
+                for (int i = 0; i < dates.size(); i++) {
+                    categoryStats.add(0f);
+                }
+                
+                StringBuilder query = new StringBuilder();
+                query.append("SELECT r.date_operation, SUM(r.total) as daily_total ")
+                     .append("FROM ").append(schema).append(".records r ")
+                     .append("INNER JOIN ").append(schema).append(".categories c ON r.id_category = c.id_category ")
+                     .append("WHERE c.category_name = ? ")
+                     .append("AND r.date_operation >= ? ")
+                     .append("AND r.date_operation <= ? ")
+                     .append("GROUP BY r.date_operation ")
+                     .append("ORDER BY r.date_operation");
+
+                try (PreparedStatement pstmt = conn.prepareStatement(query.toString())) {
+                    pstmt.setString(1, category);
+                    pstmt.setDate(2, Date.valueOf(from_date));
+                    pstmt.setDate(3, Date.valueOf(to_date));
+                    
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            String date = rs.getDate("date_operation").toString();
+                            float total = rs.getFloat("daily_total");
+                            int dateIndex = dates.indexOf(date);
+                            if (dateIndex != -1) {
+                                categoryStats.set(dateIndex, total);
+                            }
+                        }
+                    }
+                }
+                
+                stats.add(categoryStats);
+            }
+        }
+        
+        return stats;
+    }
+
+    public ArrayList<String> selectAllDates(String from_date, String to_date) throws SQLException {
+        logger.info("Selecting all dates between " + from_date + " and " + to_date);
+        ArrayList<String> dates = new ArrayList<>();
+        
+        try (Connection conn = getConnection()) {
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT DISTINCT date_operation ")
+                 .append("FROM ").append(schema).append(".records ")
+                 .append("WHERE date_operation >= ? ")
+                 .append("AND date_operation <= ? ")
+                 .append("ORDER BY date_operation");
+
+            try (PreparedStatement pstmt = conn.prepareStatement(query.toString())) {
+                pstmt.setDate(1, Date.valueOf(from_date));
+                pstmt.setDate(2, Date.valueOf(to_date));
+                
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        dates.add(rs.getDate("date_operation").toString());
+                    }
+                }
+            }
+        }
+        
+        return dates;
+    }
+
+    public ArrayList<String> selectCategories(String[] category_names) throws SQLException {
+        logger.info("Selecting specific categories");
+        ArrayList<String> categories = new ArrayList<>();
+        
+        try (Connection conn = getConnection()) {
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT category_name FROM ").append(schema).append(".categories ");
+            
+            if (category_names != null && category_names.length > 0) {
+                query.append("WHERE category_name IN (");
+                for (int i = 0; i < category_names.length; i++) {
+                    query.append("?");
+                    if (i < category_names.length - 1) {
+                        query.append(",");
+                    }
+                }
+                query.append(")");
+            }
+            
+            query.append(" ORDER BY category_name");
+
+            try (PreparedStatement pstmt = conn.prepareStatement(query.toString())) {
+                if (category_names != null && category_names.length > 0) {
+                    for (int i = 0; i < category_names.length; i++) {
+                        pstmt.setString(i + 1, category_names[i]);
+                    }
+                }
+                
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
+                        categories.add(rs.getString("category_name"));
+                    }
+                }
+            }
+        }
+        
+        return categories;
+    }
 }
